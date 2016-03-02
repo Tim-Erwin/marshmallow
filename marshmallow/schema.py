@@ -648,22 +648,38 @@ class BaseSchema(base.SchemaABC):
 
         return result, errors
 
+    def _get_only_fields(self, only):
+        """Get the fields that should only be serialized."""
+        only = only or self.only
+        if not only:
+            return None, None
+        direct_fields = []
+        nested_fields = {}
+        for field in only:
+            if isinstance(field, (tuple, list)):
+                direct_fields.append(field[0])
+                nested_fields[field[0]] = field[1]
+            else:
+                direct_fields.append(field)
+        return direct_fields, nested_fields
+
     def _update_fields(self, obj=None, many=False, only=None):
         """Update fields based on the passed in object."""
-        only = only or self.only
-        if only:
+        only_direct, only_nested = self._get_only_fields(only)
+        if only_direct:
             # Return only fields specified in only option
             if self.opts.fields:
-                field_names = self.set_class(self.opts.fields) & self.set_class(only)
+                field_names = (self.set_class(self.opts.fields) &
+                               self.set_class(only_direct))
             else:
-                field_names = self.set_class(only)
+                field_names = self.set_class(only_direct)
         elif self.opts.fields:
             # Return fields specified in fields option
             field_names = self.set_class(self.opts.fields)
         elif self.opts.additional:
             # Return declared fields + additional fields
             field_names = (self.set_class(self.declared_fields.keys()) |
-                            self.set_class(self.opts.additional))
+                           self.set_class(self.opts.additional))
         else:
             field_names = self.set_class(self.declared_fields.keys())
 
@@ -672,6 +688,11 @@ class BaseSchema(base.SchemaABC):
         if excludes:
             field_names = field_names - excludes
         ret = self.__filter_fields(field_names, obj, many=many)
+        # Set nested only parameters overriding the only parameters declared on the fields
+        for field_name, field in [(fn, f) for fn, f in ret.items() if hasattr(f, 'only')]:
+            field.only_explicit = None
+            if only_nested and field_name in only_nested:
+                field.only_explicit = only_nested[field_name]
         # Set parents
         self.__set_field_attrs(ret)
         self.fields = ret
