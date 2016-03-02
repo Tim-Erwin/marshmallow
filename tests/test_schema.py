@@ -669,6 +669,18 @@ def test_error_raised_if_additional_option_is_not_list():
                 additional = 'email'
 
 
+def test_only_on_dump():
+    class MySchema(Schema):
+        foo = fields.Field()
+        bar = fields.Field()
+        baz = fields.Field()
+    sch = MySchema()
+    data = dict(foo=42, bar=24, baz=242)
+    result = sch.dump(data, only=('foo', 'bar'))
+    assert 'foo' in result.data
+    assert 'bar' in result.data
+    assert 'baz' not in result.data
+
 def test_only_and_exclude():
     class MySchema(Schema):
         foo = fields.Field()

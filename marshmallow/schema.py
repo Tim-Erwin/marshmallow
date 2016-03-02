@@ -318,7 +318,7 @@ class BaseSchema(base.SchemaABC):
         - ``index_errors``: If `True`, errors dictionaries will include the index
             of invalid items in a collection.
         - ``load_only``: Tuple or list of fields to exclude from serialized results.
-        - ``dump_only``: Tuple or list of fields to exclude from deserialization
+        - ``dump_only``: Tuple or list of fields to exclude from deserialization.
         """
         pass
 
@@ -453,7 +453,7 @@ class BaseSchema(base.SchemaABC):
 
     ##### Serialization/Deserialization API #####
 
-    def dump(self, obj, many=None, update_fields=True, **kwargs):
+    def dump(self, obj, many=None, update_fields=True, only=None, **kwargs):
         """Serialize an object to native Python data types according to this
         Schema's fields.
 
@@ -463,6 +463,7 @@ class BaseSchema(base.SchemaABC):
         :param bool update_fields: Whether to update the schema's field classes. Typically
             set to `True`, but may be `False` when serializing a homogenous collection.
             This parameter is used by `fields.Nested` to avoid multiple updates.
+        :param only: A tuple or list of fields to serialize, other fields are ignored.
         :return: A tuple of the form (``data``, ``errors``)
         :rtype: `MarshalResult`, a `collections.namedtuple`
 
@@ -471,8 +472,8 @@ class BaseSchema(base.SchemaABC):
         many = self.many if many is None else bool(many)
         if not many and utils.is_collection(obj) and not utils.is_keyed_tuple(obj):
             warnings.warn('Implicit collection handling is deprecated. Set '
-                            'many=True to serialize a collection.',
-                            category=DeprecationWarning)
+                          'many=True to serialize a collection.',
+                          category=DeprecationWarning)
 
         if many and utils.is_iterable_but_not_string(obj):
             obj = list(obj)
@@ -480,7 +481,7 @@ class BaseSchema(base.SchemaABC):
         processed_obj = self._invoke_dump_processors(PRE_DUMP, obj, many, original_data=obj)
 
         if update_fields:
-            self._update_fields(processed_obj, many=many)
+            self._update_fields(processed_obj, many=many, only=only)
 
         try:
             preresult = self._marshal(
@@ -647,14 +648,15 @@ class BaseSchema(base.SchemaABC):
 
         return result, errors
 
-    def _update_fields(self, obj=None, many=False):
+    def _update_fields(self, obj=None, many=False, only=None):
         """Update fields based on the passed in object."""
-        if self.only:
+        only = only or self.only
+        if only:
             # Return only fields specified in only option
             if self.opts.fields:
-                field_names = self.set_class(self.opts.fields) & self.set_class(self.only)
+                field_names = self.set_class(self.opts.fields) & self.set_class(only)
             else:
-                field_names = self.set_class(self.only)
+                field_names = self.set_class(only)
         elif self.opts.fields:
             # Return fields specified in fields option
             field_names = self.set_class(self.opts.fields)
