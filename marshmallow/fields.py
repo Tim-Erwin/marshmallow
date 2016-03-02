@@ -419,8 +419,7 @@ class Nested(Field):
         if not self.__updated_fields:
             schema._update_fields(obj=nested_obj, many=self.many)
             self.__updated_fields = True
-        ret = schema.dump(nested_obj, many=self.many,
-                update_fields=not self.__updated_fields).data
+        ret = schema.dump(nested_obj, many=self.many, update_fields=False).data
         if isinstance(self.only, basestring):  # self.only is a field name
             if self.many:
                 return utils.pluck(ret, key=self.only)
@@ -501,14 +500,14 @@ class List(Field):
         if isinstance(cls_or_instance, type):
             if not issubclass(cls_or_instance, FieldABC):
                 raise ValueError('The type of the list elements '
-                                           'must be a subclass of '
-                                           'marshmallow.base.FieldABC')
+                                 'must be a subclass of '
+                                 'marshmallow.base.FieldABC')
             self.container = cls_or_instance()
         else:
             if not isinstance(cls_or_instance, FieldABC):
                 raise ValueError('The instances of the list '
-                                           'elements must be of type '
-                                           'marshmallow.base.FieldABC')
+                                 'elements must be of type '
+                                 'marshmallow.base.FieldABC')
             self.container = cls_or_instance
 
     def get_value(self, attr, obj, accessor=None):
@@ -917,7 +916,6 @@ class Time(Field):
         """Deserialize an ISO8601-formatted time to a :class:`datetime.time` object."""
         if not value:   # falsy values are invalid
             self.fail('invalid')
-            raise err
         try:
             return utils.from_iso_time(value)
         except (AttributeError, TypeError, ValueError):
@@ -940,7 +938,6 @@ class Date(Field):
             return value.isoformat()
         except AttributeError:
             self.fail('format', input=value)
-        return value
 
     def _deserialize(self, value, attr, data):
         """Deserialize an ISO8601-formatted date string to a

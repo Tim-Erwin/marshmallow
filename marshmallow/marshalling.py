@@ -118,9 +118,9 @@ class Marshaller(ErrorStore):
         if many and obj is not None:
             self._pending = True
             ret = [self.serialize(d, fields_dict, many=False,
-                                    dict_class=dict_class, accessor=accessor,
-                                    index=idx, index_errors=index_errors)
-                    for idx, d in enumerate(obj)]
+                                  dict_class=dict_class, accessor=accessor,
+                                  index=idx, index_errors=index_errors)
+                   for idx, d in enumerate(obj)]
             self._pending = False
             if self.errors:
                 raise ValidationError(
@@ -233,9 +233,9 @@ class Unmarshaller(ErrorStore):
         if many and data is not None:
             self._pending = True
             ret = [self.deserialize(d, fields_dict, many=False,
-                        partial=partial, dict_class=dict_class,
-                        index=idx, index_errors=index_errors)
-                    for idx, d in enumerate(data)]
+                       partial=partial, dict_class=dict_class,
+                       index=idx, index_errors=index_errors)
+                   for idx, d in enumerate(data)]
 
             self._pending = False
             if self.errors:

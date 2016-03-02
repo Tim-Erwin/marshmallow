@@ -726,6 +726,7 @@ class BaseSchema(base.SchemaABC):
                            'Did you mean "fields.{1}()"?'
                            .format(field_name, field_obj.__name__))
                     raise TypeError(msg)
+                raise
         return fields_dict
 
     def __filter_fields(self, field_names, obj, many=False):
