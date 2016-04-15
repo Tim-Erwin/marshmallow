@@ -650,7 +650,7 @@ class BaseSchema(base.SchemaABC):
     def _get_only_fields(self):
         """Get the fields that should only be serialized."""
         if not self.only:
-            return None, None
+            return None, {}
         direct_fields = []
         nested_fields = {}
         for field in self.only:
@@ -689,7 +689,7 @@ class BaseSchema(base.SchemaABC):
         # Set nested only parameters overriding the only parameters declared on the fields
         for field_name, field in [(fn, f) for fn, f in ret.items() if hasattr(f, 'only')]:
             field.only_explicit = None
-            if only_nested and field_name in only_nested:
+            if field_name in only_nested:
                 field.only_explicit = only_nested[field_name]
         # Set parents
         self.__set_field_attrs(ret)
