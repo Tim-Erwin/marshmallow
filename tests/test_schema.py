@@ -669,39 +669,7 @@ def test_error_raised_if_additional_option_is_not_list():
                 additional = 'email'
 
 
-def test_only_on_dump():
-    class MySchema(Schema):
-        foo = fields.Field()
-        bar = fields.Field()
-        baz = fields.Field()
-    sch = MySchema()
-    data = dict(foo=42, bar=24, baz=242)
-    result = sch.dump(data, only=('foo', 'bar'))
-    assert 'foo' in result.data
-    assert 'bar' in result.data
-    assert 'baz' not in result.data
-
-def test_nested_only_on_dump():
-    class ChildSchema(Schema):
-        foo = fields.Field()
-        bar = fields.Field()
-        baz = fields.Field()
-    class ParentSchema(Schema):
-        bla = fields.Field()
-        bli = fields.Field()
-        blubb = fields.Nested(ChildSchema)
-    sch = ParentSchema()
-    data = dict(bla=1, bli=2, blubb=dict(foo=42, bar=24, baz=242))
-    result = sch.dump(data, only=('bla', ('blubb', ('foo', 'bar'))))
-    assert 'bla' in result.data
-    assert 'blubb' in result.data
-    assert 'bli' not in result.data
-    child = result.data['blubb']
-    assert 'foo' in child
-    assert 'bar' in child
-    assert 'baz' not in child
-
-def test_nested_only_on_instatiation():
+def test_nested_only():
     class ChildSchema(Schema):
         foo = fields.Field()
         bar = fields.Field()

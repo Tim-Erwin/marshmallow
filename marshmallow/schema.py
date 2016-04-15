@@ -453,7 +453,7 @@ class BaseSchema(base.SchemaABC):
 
     ##### Serialization/Deserialization API #####
 
-    def dump(self, obj, many=None, update_fields=True, only=None, **kwargs):
+    def dump(self, obj, many=None, update_fields=True, **kwargs):
         """Serialize an object to native Python data types according to this
         Schema's fields.
 
@@ -463,7 +463,6 @@ class BaseSchema(base.SchemaABC):
         :param bool update_fields: Whether to update the schema's field classes. Typically
             set to `True`, but may be `False` when serializing a homogenous collection.
             This parameter is used by `fields.Nested` to avoid multiple updates.
-        :param only: A tuple or list of fields to serialize, other fields are ignored.
         :return: A tuple of the form (``data``, ``errors``)
         :rtype: `MarshalResult`, a `collections.namedtuple`
 
@@ -481,7 +480,7 @@ class BaseSchema(base.SchemaABC):
         processed_obj = self._invoke_dump_processors(PRE_DUMP, obj, many, original_data=obj)
 
         if update_fields:
-            self._update_fields(processed_obj, many=many, only=only)
+            self._update_fields(processed_obj, many=many)
 
         try:
             preresult = self._marshal(
@@ -648,14 +647,13 @@ class BaseSchema(base.SchemaABC):
 
         return result, errors
 
-    def _get_only_fields(self, only):
+    def _get_only_fields(self):
         """Get the fields that should only be serialized."""
-        only = only or self.only
-        if not only:
+        if not self.only:
             return None, None
         direct_fields = []
         nested_fields = {}
-        for field in only:
+        for field in self.only:
             if isinstance(field, (tuple, list)):
                 direct_fields.append(field[0])
                 nested_fields[field[0]] = field[1]
@@ -663,9 +661,9 @@ class BaseSchema(base.SchemaABC):
                 direct_fields.append(field)
         return direct_fields, nested_fields
 
-    def _update_fields(self, obj=None, many=False, only=None):
+    def _update_fields(self, obj=None, many=False):
         """Update fields based on the passed in object."""
-        only_direct, only_nested = self._get_only_fields(only)
+        only_direct, only_nested = self._get_only_fields()
         if only_direct:
             # Return only fields specified in only option
             if self.opts.fields:
